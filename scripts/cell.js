@@ -1,10 +1,5 @@
-
-var define;
-
-define(function () {
-    'use strict';
-
-    var cell = function (properties) {
+define(['resourceManager'], function (resourceManager) {
+    var cell = function (spec) {
         var my = {};
 
         my.draw = function (context) {
@@ -20,29 +15,41 @@ define(function () {
         };
 
         my.drawHighlighted = function (context) {
-            context.drawImage(properties.highlightedImage, 
-                              properties.x, 
-                              properties.y, 
-                              properties.width, 
-                              properties.height);
+            context.drawImage(spec.highlightedImage, 
+                              spec.x, 
+                              spec.y, 
+                              spec.highlightedImage.width, 
+                              spec.highlightedImage.height);
         };
 
         my.drawSelected = function (context) {
-            context.drawImage(my.selectedImage, properties.x, properties.y, properties.width, properties.height);
+            context.drawImage(my.selectedImage, 
+                              spec.x, 
+                              spec.y, 
+                              my.selectedImage.width, 
+                              my.selectedImage.height);
         };
 
         my.drawNormal = function (context) {
-            context.drawImage(properties.image, properties.x, properties.y, properties.width, properties.height);
+            context.drawImage(resourceManager.images.cell, 
+                              spec.x, 
+                              spec.y, 
+                              resourceManager.images.cell.width, 
+                              resourceManager.images.cell.height);
         };
 
         my.drawFlagged = function (context) {
-            context.drawImage(my.flaggedImage, properties.x, properties.y, properties.width, properties.height);
+            context.drawImage(resourceManager.images.flag, 
+                              spec.x, 
+                              spec.y, 
+                              resourceManager.images.flag.width, 
+                              resourceManager.images.flag.height);
         };
 
         my.inBounds = function (pos) {
-            return (pos.x > properties.x && pos.y > properties.y &&
-                    pos.x < (properties.x + properties.width) &&
-                    pos.y < (properties.y + properties.height));
+            return (pos.x > spec.x && pos.y > spec.y &&
+                    pos.x < (spec.x + spec.width) &&
+                    pos.y < (spec.y + spec.height));
         };
 
         return my;

@@ -1,100 +1,122 @@
-define(['cell', 'resourceManager'], function (cell, resourceManager) {
+define(['cell', 
+        'resourceManager', 
+        'button', 
+        'counter'], function (cell, resourceManager, button, counter) {
+
     var game = function () {
         var canvas = document.getElementById('minesweeper'),
             context = canvas.getContext('2d'),
             board = [],
+            gameButton = button({
+                x: 240,
+                y: 600
+            }),
+            timeCounter = counter({
+                x: 0,
+                y: 600
+            }),
+            flagCounter = counter({
+                x: 360,
+                y: 600
+            }),
             cellHeight = 60,
             cellWidth = 60,
             boardSize = 10,
             numOfMines = 10,
             highlightedCell,
-            resourcesManager,
             my = {};
 
-        my.init = function () {
-            // Bind event handlers
-            canvas.addEventListener('touchstart', function (e) {
-                var pos,
-                    row,
-                    i,
-                    j,
-                    cell,
-                    touch;
+        my.touchStart = function (e) {
+            var pos,
+                row,
+                i,
+                j,
+                cell;
 
-                e.preventDefault();
+            e.preventDefault();
 
-                pos = {
-                    x: e.targetTouches[0].pageX - canvas.offsetLeft,
-                    y: e.targetTouches[0].pageY - canvas.offsetTop
-                };
+            pos = {
+                x: e.targetTouches[0].pageX - canvas.offsetLeft,
+                y: e.targetTouches[0].pageY - canvas.offsetTop
+            };
 
-                for (i = 0; i < boardSize; i += 1) {
-                    for (j = 0; j < boardSize; j += 1) {
-                        cell = board[i][j];
+            for (i = 0; i < boardSize; i += 1) {
+                for (j = 0; j < boardSize; j += 1) {
+                    cell = board[i][j];
 
-                        if (cell.inBounds(pos)) {
-                            if (e.shiftKey) {
-                                cell.flagged = true;
-                                cell.flaggedImage = resourceManager.images.flag;
-                            } else {
-                                cell.highlighted = true;
-                                highlightedCell = cell;
-                            }
+                    if (cell.inBounds(pos)) {
+                        if (e.shiftKey) {
+                            cell.flagged = true;
+                        } else {
+                            cell.highlighted = true;
+                            highlightedCell = cell;
                         }
                     }
                 }
-            }, false);
+            }
+        };
 
-            canvas.addEventListener('touchend', function (e) {
-                e.preventDefault();
+        my.touchEnd = function (e) {
+            var pos,
+                row,
+                i,
+                j,
+                cell;
 
-                var pos,
-                    row,
-                    i,
-                    j,
-                    cell;
+            e.preventDefault();    
 
-                pos = {
-                    x: e.changedTouches[0].pageX - canvas.offsetLeft,
-                    y: e.changedTouches[0].pageY - canvas.offsetTop
-                };
+            pos = {
+                x: e.changedTouches[0].pageX - canvas.offsetLeft,
+                y: e.changedTouches[0].pageY - canvas.offsetTop
+            };
 
-                for (i = 0; i < boardSize; i += 1) {
-                    for (j = 0; j < boardSize; j += 1) {
-                        cell = board[i][j];
+            for (i = 0; i < boardSize; i += 1) {
+                for (j = 0; j < boardSize; j += 1) {
+                    cell = board[i][j];
 
-                        if (cell.inBounds(pos)) {
+                    if (cell.inBounds(pos)) {
 
-                            // Active the cell if it was the one we were highlighting
-                            if (cell.highlighted) {
-                                cell.highlighted = false;
-                                my.activateCell(i, j);
-                            }
-
-                            highlightedCell = null;
+                        // Active the cell if it was the one we were highlighting
+                        if (cell.highlighted) {
+                            cell.highlighted = false;
+                            my.activateCell(i, j);
                         }
-                    }
-                }
-            }, false);
 
-            canvas.addEventListener('touchmove', function (e) {
-                e.preventDefault();
-
-                var pos = {
-                    x: e.pageX - canvas.offsetLeft,
-                    y: e.pageY - canvas.offsetTop
-                };
-
-                if (highlightedCell) {
-                    // If we moved out of the highlighted cell, unhighlight it
-                    if (!highlightedCell.inBounds(pos)) {
-                        highlightedCell.highlighted = false;
                         highlightedCell = null;
                     }
                 }
-            }, false);
+            }
+        };
 
-            resourceManager.loadImages({
+        my.touchMove = function (e) {
+            var pos;
+
+            e.preventDefault();
+
+            pos = {
+                x: e.changedTouches[0].pageX - canvas.offsetLeft,
+                y: e.changedTouches[0].pageY - canvas.offsetTop
+            };
+
+            if (highlightedCell) {
+                // If we moved out of the highlighted cell, unhighlight it
+                if (!highlightedCell.inBounds(pos)) {
+                    highlightedCell.highlighted = false;
+                    highlightedCell = null;
+                }
+            }
+        };
+
+        my.init = function () {
+            // Bind event handlers
+            canvas.addEventListener('touchstart', my.touchStart, false);
+            canvas.addEventListener('touchend', my.touchEnd, false);
+            canvas.addEventListener('touchmove', my.touchMove, false);
+
+            // Load resources before starting game
+            resourceManager.imagePaths = {
+                'counter_background': 'resources/counter_background.png',
+                'game_button': 'resources/game_button.png',
                 'mine': 'resources/mine.png',
                 'cell': 'resources/cell.png',
                 'flag': 'resources/flag.png',
@@ -104,8 +126,13 @@ define(['cell', 'resourceManager'], function (cell, resourceManager) {
                 'cell_3': 'resources/cell_3.png',
                 'cell_4': 'resources/cell_4.png',
                 'cell_5': 'resources/cell_5.png'
-            }, function () {
-                // images loaded
+            };
+
+            resourceManager.fontPaths = {
+                'digital': 'resources/digital_7.ttf'
+            };
+
+            resourceManager.loadAll(function () {
                 my.start();
             });
         };
@@ -116,7 +143,7 @@ define(['cell', 'resourceManager'], function (cell, resourceManager) {
             if (board[row][col].selected) {
                 return;
             } else if (board[row][col].mineCount > 0 ||
-                       board[row][col].cellType == 'mine') {
+                board[row][col].cellType == 'mine') {
                 board[row][col].selected = true;
                 return;
             }
@@ -175,6 +202,9 @@ define(['cell', 'resourceManager'], function (cell, resourceManager) {
             context.fillRect(0, 0, canvas.width, canvas.height);
 
             my.drawBoard();
+            gameButton.draw(context);
+            timeCounter.draw(context);
+            flagCounter.draw(context);
         };
 
         my.getMineCount = function (row, col) {
@@ -229,7 +259,6 @@ define(['cell', 'resourceManager'], function (cell, resourceManager) {
                         y: i * cellHeight,
                         width: cellWidth,
                         height: cellHeight,
-                        image: resourceManager.images.cell,
                         highlightedImage: resourceManager.images.cell_0
                     });
                 }
@@ -242,7 +271,6 @@ define(['cell', 'resourceManager'], function (cell, resourceManager) {
                 mineCell = board[Math.floor(Math.random()*boardSize)][Math.floor(Math.random()*boardSize)];
                 mineCell.cellType = 'mine';
                 mineCell.selectedImage = resourceManager.images.mine;
-                
             }
 
             my.assignMineCounts();

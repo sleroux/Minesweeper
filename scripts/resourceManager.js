@@ -1,8 +1,14 @@
 define(function () {
     var resourceManager = {
+        imagePaths: {},
+        fontsPaths: {},
         images: {},
-        
-        loadImages: function (paths, callback) {
+
+        loadAll: function (callback) {
+            this.loadImages(callback);
+        },
+
+        loadImages: function (callback) {
             var numLoaded = 0,
                 i,
                 key;
@@ -10,17 +16,17 @@ define(function () {
             var loadFunc = function () {
                 numLoaded += 1;
 
-                if (numLoaded == Object.keys(paths).length) {
+                if (numLoaded == Object.keys(resourceManager.imagePaths).length) {
                     callback();
                 }
             };
 
-            for (key in paths) {
+            for (key in this.imagePaths) {
                 this.images[key] = new Image();
                 this.images[key].onload = loadFunc;
-                this.images[key].src = paths[key];
+                this.images[key].src = this.imagePaths[key];
             }
-        }        
+        }  
     };
 
     return resourceManager;
