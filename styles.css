@@ -1,0 +1,11 @@
+div.counter {
+    display: inline;
+}
+
+div#game-controls {
+    text-align: center;
+}
+
+div#game-container {
+    text-align: center;
+}

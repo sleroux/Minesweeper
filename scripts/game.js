@@ -1,32 +1,23 @@
-define(['cell', 
+define(['jquery',
+        'cell', 
         'resourceManager', 
         'button', 
         'counter',
         'events'], 
-        function (cell, resourceManager, button, counter, events) {
+        function ($, cell, resourceManager, button, counter, events) {
 
     var game = function () {
         var canvas = document.getElementById('minesweeper'),
             context = canvas.getContext('2d'),
             board = [],
             eventManager = events(canvas),
-            gameButton = button({
-                x: 240,
-                y: 600
-            }),
-            timeCounter = counter({
-                x: 0,
-                y: 600
-            }),
-            flagCounter = counter({
-                x: 360,
-                y: 600
-            }),
             cellHeight = 60,
             cellWidth = 60,
             boardSize = 10,
             numOfMines = 10,
             highlightedCell,
+            startTime,
+            flagCount,
             my = {};
 
 
@@ -93,27 +84,65 @@ define(['cell',
             }
         });
 
+        // Set up paths for resources
+        resourceManager.imagePaths = {
+            'counter_background': 'resources/counter_background.png',
+            'game_button': 'resources/game_button.png',
+            'mine': 'resources/mine.png',
+            'cell': 'resources/cell.png',
+            'flag': 'resources/flag.png',
+            'cell_0': 'resources/cell_0.png',
+            'cell_1': 'resources/cell_1.png',
+            'cell_2': 'resources/cell_2.png',
+            'cell_3': 'resources/cell_3.png',
+            'cell_4': 'resources/cell_4.png',
+            'cell_5': 'resources/cell_5.png'
+        };
+
+        resourceManager.fontPaths = {
+            'digital': 'resources/digital_7.ttf'
+        };
+
+        function timeSinceStart () {
+            var difference,
+                daysDifference,
+                minutesDifference,
+                secondsDifference,
+                minutes,
+                seconds;
+
+            difference = Date.now() - startTime.getTime();
+            daysDifference = Math.floor(difference/1000/60/60/24);
+            difference -= daysDifference*1000*60*60*24;
+         
+            hoursDifference = Math.floor(difference/1000/60/60);
+            difference -= hoursDifference*1000*60*60;
+         
+            minutesDifference = Math.floor(difference/1000/60);
+            difference -= minutesDifference*1000*60;
+         
+            secondsDifference = Math.floor(difference/1000);
+
+            if (secondsDifference.toString().length < 2) {
+                seconds = ['0', secondsDifference].join('');
+            } else {
+                seconds = secondsDifference;
+            }
+
+            if (minutesDifference.toString().length < 2) {
+                minutes = ['0', minutesDifference].join('');
+            } else {
+                minutes = secondsDifference;
+            }
+            
+            return [minutes, ':', seconds].join('');
+        }
+
+        function updateStartTime () {
+            $('#game-time').html(timeSinceStart());
+        }
+
         my.init = function () {
-
-            // Load resources before starting game
-            resourceManager.imagePaths = {
-                'counter_background': 'resources/counter_background.png',
-                'game_button': 'resources/game_button.png',
-                'mine': 'resources/mine.png',
-                'cell': 'resources/cell.png',
-                'flag': 'resources/flag.png',
-                'cell_0': 'resources/cell_0.png',
-                'cell_1': 'resources/cell_1.png',
-                'cell_2': 'resources/cell_2.png',
-                'cell_3': 'resources/cell_3.png',
-                'cell_4': 'resources/cell_4.png',
-                'cell_5': 'resources/cell_5.png'
-            };
-
-            resourceManager.fontPaths = {
-                'digital': 'resources/digital_7.ttf'
-            };
-
             resourceManager.loadAll(function () {
                 my.start();
             });
@@ -172,6 +201,17 @@ define(['cell',
         };
 
         my.start = function () {
+
+            $('#new-game').click(function (e) {
+                // Setup a new board when starting a new game
+                my.start();
+            });
+
+            startTime = new Date();
+            clearInterval();
+            setInterval(updateStartTime, 1000);
+
+            $('#flags-left').html(numOfMines);
             my.setupBoard();
             my.tick();
         };
@@ -180,13 +220,11 @@ define(['cell',
         };
 
         my.render = function () {
+            console.log('asdf');
             context.fillStyle = 'grey';
             context.fillRect(0, 0, canvas.width, canvas.height);
 
             my.drawBoard();
-            gameButton.draw(context);
-            timeCounter.draw(context);
-            flagCounter.draw(context);
         };
 
         my.getMineCount = function (row, col) {

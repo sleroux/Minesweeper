@@ -3,8 +3,17 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="viewport" content="initial-scale=0.5, user-scalable=no, width=device-width">
     <script data-main="scripts/main" src="scripts/vendor/require-jquery.js"></script>
+    <link href="styles.css" rel="stylesheet" type="text/css">
 </head>
 <body>
-    <canvas id="minesweeper" width="640px" height="960px" />
+    <div id="game-container">
+        <canvas id="minesweeper" width="600px" height="600px"></canvas>
+    </div>
+    <div id="game-controls">
+        <div id="flags-left" class="counter">0000</div>
+        <button id="new-game">New Game</button>
+        <div id="game-time" class="counter">00:00</div>
+
+    </div>
 </body>
 </html>
