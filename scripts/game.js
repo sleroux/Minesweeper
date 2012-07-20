@@ -1,12 +1,15 @@
 define(['cell', 
         'resourceManager', 
         'button', 
-        'counter'], function (cell, resourceManager, button, counter) {
+        'counter',
+        'events'], 
+        function (cell, resourceManager, button, counter, events) {
 
     var game = function () {
         var canvas = document.getElementById('minesweeper'),
             context = canvas.getContext('2d'),
             board = [],
+            eventManager = events(canvas),
             gameButton = button({
                 x: 240,
                 y: 600
@@ -26,19 +29,15 @@ define(['cell',
             highlightedCell,
             my = {};
 
-        my.touchStart = function (e) {
-            var pos,
-                row,
-                i,
-                j,
-                cell;
+
+        // Event Handlers
+        eventManager.registerHandler('cursorDown', function (e, pos) {
+           var row,
+               i,
+               j,
+               cell;
 
             e.preventDefault();
-
-            pos = {
-                x: e.targetTouches[0].pageX - canvas.offsetLeft,
-                y: e.targetTouches[0].pageY - canvas.offsetTop
-            };
 
             for (i = 0; i < boardSize; i += 1) {
                 for (j = 0; j < boardSize; j += 1) {
@@ -54,21 +53,15 @@ define(['cell',
                     }
                 }
             }
-        };
+        });
 
-        my.touchEnd = function (e) {
-            var pos,
-                row,
+        eventManager.registerHandler('cursorUp', function (e, pos) {
+            var row,
                 i,
                 j,
                 cell;
 
             e.preventDefault();    
-
-            pos = {
-                x: e.changedTouches[0].pageX - canvas.offsetLeft,
-                y: e.changedTouches[0].pageY - canvas.offsetTop
-            };
 
             for (i = 0; i < boardSize; i += 1) {
                 for (j = 0; j < boardSize; j += 1) {
@@ -86,17 +79,10 @@ define(['cell',
                     }
                 }
             }
-        };
+        });
 
-        my.touchMove = function (e) {
-            var pos;
-
+        eventManager.registerHandler('cursorMove', function (e, pos) {
             e.preventDefault();
-
-            pos = {
-                x: e.changedTouches[0].pageX - canvas.offsetLeft,
-                y: e.changedTouches[0].pageY - canvas.offsetTop
-            };
 
             if (highlightedCell) {
                 // If we moved out of the highlighted cell, unhighlight it
@@ -105,13 +91,9 @@ define(['cell',
                     highlightedCell = null;
                 }
             }
-        };
+        });
 
         my.init = function () {
-            // Bind event handlers
-            canvas.addEventListener('touchstart', my.touchStart, false);
-            canvas.addEventListener('touchend', my.touchEnd, false);
-            canvas.addEventListener('touchmove', my.touchMove, false);
 
             // Load resources before starting game
             resourceManager.imagePaths = {
