@@ -3,12 +3,11 @@ var define,
     util,
     requestAnimationFrame;
 
-define(['jquery', 'cell', 'resources'], function ($, cell, resources) {
+define(['cell', 'resources'], function (cell, resources) {
     'use strict';
 
     var game = function () {
-        var $canvas = $('#minesweeper'),
-            canvas = document.getElementById('minesweeper'),
+        var canvas = document.getElementById('minesweeper'),
             context = canvas.getContext('2d'),
             board = [],
             cellHeight = 60,
@@ -21,31 +20,48 @@ define(['jquery', 'cell', 'resources'], function ($, cell, resources) {
 
         my.init = function () {
             // Bind event handlers
-            $canvas.on('mousedown', function (e) {
-                var pos = util.getPosition(e),
+            canvas.addEventListener('mousedown', function (e) {
+                var pos,
                     row,
                     i,
                     j,
                     cell;
+
+                if (!e) var e = event;
+
+                pos = {
+                    x: e.pageX - canvas.offsetLeft,
+                    y: e.pageY - canvas.offsetTop
+                };
 
                 for (i = 0; i < boardSize; i += 1) {
                     for (j = 0; j < boardSize; j += 1) {
                         cell = board[i][j];
 
                         if (cell.inBounds(pos)) {
-                            cell.highlighted = true;
-                            highlightedCell = cell;
+                            if (e.shiftKey) {
+                                cell.flagged = true;
+                                cell.flaggedImage = resourcesManager.images['flag'];
+                            } else {
+                                cell.highlighted = true;
+                                highlightedCell = cell;
+                            }
                         }
                     }
                 }
-            });
+            }, false);
 
-            $canvas.on('mouseup', function (e) {
-                var pos = util.getPosition(e),
+            canvas.addEventListener('mouseup', function (e) {
+                var pos,
                     row,
                     i,
                     j,
                     cell;
+
+                pos = {
+                    x: e.pageX - canvas.offsetLeft,
+                    y: e.pageY - canvas.offsetTop
+                };
 
                 for (i = 0; i < boardSize; i += 1) {
                     for (j = 0; j < boardSize; j += 1) {
@@ -56,17 +72,20 @@ define(['jquery', 'cell', 'resources'], function ($, cell, resources) {
                             // Active the cell if it was the one we were highlighting
                             if (cell.highlighted) {
                                 cell.highlighted = false;
-                                my.activeCell(i, j);
+                                my.activateCell(i, j);
                             };
 
                             highlightedCell = null;
                         }
                     }
                 }
-            });
+            }, false);
 
-            $canvas.on('mousemove', function (e) {
-                var pos = util.getPosition(e);
+            canvas.addEventListener('mousemove', function (e) {
+                var pos = {
+                    x: e.pageX - canvas.offsetLeft,
+                    y: e.pageY - canvas.offsetTop
+                };
 
                 if (highlightedCell) {
                     // If we moved out of the highlighted cell, unhighlight it
@@ -75,12 +94,14 @@ define(['jquery', 'cell', 'resources'], function ($, cell, resources) {
                         highlightedCell = null;
                     }
                 }
-            });
+            }, false);
 
             // Load resource manager and resources
             resourcesManager = resources();
             resourcesManager.loadImages({
+                'mine': 'resources/mine.png',
                 'cell': 'resources/cell.png',
+                'flag': 'resources/flag.png',
                 'cell_0': 'resources/cell_0.png',
                 'cell_1': 'resources/cell_1.png',
                 'cell_2': 'resources/cell_2.png',
@@ -93,12 +114,13 @@ define(['jquery', 'cell', 'resources'], function ($, cell, resources) {
             });
         };
 
-        my.activeCell = function (row, col) {
+        my.activateCell = function (row, col) {
             // Stop if the cell isalready selected or if this cell has a mine
             // count > 0
             if (board[row][col].selected) {
                 return;
-            } else if (board[row][col].mineCount > 0) {
+            } else if (board[row][col].mineCount > 0 ||
+                       board[row][col].cellType == 'mine') {
                 board[row][col].selected = true;
                 return;
             };
@@ -106,35 +128,35 @@ define(['jquery', 'cell', 'resources'], function ($, cell, resources) {
             board[row][col].selected = true;
 
             if (row - 1 >= 0 && col - 1 >= 0) {
-                my.activeCell(row - 1, col - 1);
+                my.activateCell(row - 1, col - 1);
             };
 
             if (row - 1 >= 0) {
-                my.activeCell(row - 1, col);
+                my.activateCell(row - 1, col);
             }
 
             if (row - 1 >= 0 && col + 1 < boardSize) {
-                my.activeCell(row - 1, col + 1);
+                my.activateCell(row - 1, col + 1);
             }
 
             if (col - 1 >= 0) {
-                my.activeCell(row, col - 1);
+                my.activateCell(row, col - 1);
             };
 
             if (col + 1 < boardSize) {
-                my.activeCell(row, col + 1);
+                my.activateCell(row, col + 1);
             }
 
             if (row + 1 < boardSize && col - 1 >= 0) {
-                my.activeCell(row + 1, col - 1);
+                my.activateCell(row + 1, col - 1);
             };
 
             if (row + 1 < boardSize) {
-                my.activeCell(row + 1, col);
+                my.activateCell(row + 1, col);
             }
 
             if (row + 1 < boardSize && col + 1 < boardSize) {
-                my.activeCell(row + 1, col + 1);
+                my.activateCell(row + 1, col + 1);
             }
         };
 
@@ -150,19 +172,11 @@ define(['jquery', 'cell', 'resources'], function ($, cell, resources) {
         };
 
         my.update = function () {
-            // Update the states of the cells based on mouse postion
-            var i, j;
-
-            for (i = 0; i < boardSize; i += 1) {
-                for (j = 0; j < boardSize; j += 1) {
-
-                }
-            }
         };
 
         my.render = function () {
             context.fillStyle = 'grey';
-            context.fillRect(0, 0, $canvas.width(), $canvas.height());
+            context.fillRect(0, 0, canvas.width, canvas.height);
 
             my.drawBoard();
         };
@@ -195,9 +209,11 @@ define(['jquery', 'cell', 'resources'], function ($, cell, resources) {
 
             for (i = 0; i < boardSize; i += 1) {
                 for (j = 0; j < boardSize; j += 1) {
-                    mineCount = my.getMineCount(i, j);
-                    board[i][j].mineCount = mineCount;
-                    board[i][j].selectedImage = resourcesManager.images['cell_' + mineCount];
+                    if (board[i][j].cellType != 'mine') {
+                        mineCount = my.getMineCount(i, j);
+                        board[i][j].mineCount = mineCount;
+                        board[i][j].selectedImage = resourcesManager.images['cell_' + mineCount];
+                    };
                 }
             }
         };
@@ -205,7 +221,8 @@ define(['jquery', 'cell', 'resources'], function ($, cell, resources) {
         my.setupBoard = function () {
             var row,
                 i,
-                j;
+                j,
+                mineCell;
 
             for (i = 0; i < boardSize; i += 1) {
                 row = [];
@@ -224,8 +241,12 @@ define(['jquery', 'cell', 'resources'], function ($, cell, resources) {
                 board[i] = row;
             }
 
+            // Setup the mines
             for (i = 0; i < numOfMines; i += 1) {
-                board[Math.floor(Math.random()*boardSize)][Math.floor(Math.random()*boardSize)].cellType = 'mine';
+                mineCell = board[Math.floor(Math.random()*boardSize)][Math.floor(Math.random()*boardSize)];
+                mineCell.cellType = 'mine';
+                mineCell.selectedImage = resourcesManager.images['mine'];
+                
             }
 
             my.assignMineCounts();

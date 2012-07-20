@@ -8,9 +8,11 @@ define(function () {
         var my = {};
 
         my.draw = function (context) {
-            if (this.selected) {
+            if (my.selected) {
                 my.drawSelected(context);
-            } else if (this.highlighted) {
+            } else if (my.flagged) {
+                my.drawFlagged(context);
+            } else if (my.highlighted) {
                 my.drawHighlighted(context);
             } else {
                 my.drawNormal(context);
@@ -26,11 +28,15 @@ define(function () {
         };
 
         my.drawSelected = function (context) {
-            context.drawImage(this.selectedImage, properties.x, properties.y, properties.width, properties.height);
+            context.drawImage(my.selectedImage, properties.x, properties.y, properties.width, properties.height);
         };
 
         my.drawNormal = function (context) {
             context.drawImage(properties.image, properties.x, properties.y, properties.width, properties.height);
+        };
+
+        my.drawFlagged = function (context) {
+            context.drawImage(my.flaggedImage, properties.x, properties.y, properties.width, properties.height);
         };
 
         my.inBounds = function (pos) {

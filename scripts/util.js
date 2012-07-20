@@ -1,6 +1,6 @@
 var util = {
     getPosition: function (e) {
-
+        /*
         //this section is from http://www.quirksmode.org/js/events_properties.html
         var targ;
         if (!e)
@@ -19,6 +19,7 @@ var util = {
         var y = e.pageY - $(targ).offset().top;
 
         return {"x": x, "y": y};
+        */
     }
 };
     
