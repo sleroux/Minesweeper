@@ -1,9 +1,7 @@
 module.exports = function (grunt) {
-    grunt.initConfig({}); 
-
-    var connect = require('connect');
-
-    grunt.registerTask('server', 'Starts the static web server', function () {
-        connect(connect.static('www-root')).listen(1337);
-    });
+    grunt.initConfig({
+        lint: {
+            files: ['scripts/cell.js', 'scripts/game.js', 'scripts/resources.js', 'scripts/util.js']
+        }
+    }); 
 }

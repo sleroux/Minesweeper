@@ -1,11 +1,4 @@
-var define,
-    document,
-    util,
-    requestAnimationFrame;
-
-define(['cell', 'resources'], function (cell, resources) {
-    'use strict';
-
+define(['cell', 'resourceManager'], function (cell, resourceManager) {
     var game = function () {
         var canvas = document.getElementById('minesweeper'),
             context = canvas.getContext('2d'),
@@ -20,18 +13,19 @@ define(['cell', 'resources'], function (cell, resources) {
 
         my.init = function () {
             // Bind event handlers
-            canvas.addEventListener('mousedown', function (e) {
+            canvas.addEventListener('touchstart', function (e) {
                 var pos,
                     row,
                     i,
                     j,
-                    cell;
+                    cell,
+                    touch;
 
-                if (!e) var e = event;
+                e.preventDefault();
 
                 pos = {
-                    x: e.pageX - canvas.offsetLeft,
-                    y: e.pageY - canvas.offsetTop
+                    x: e.targetTouches[0].pageX - canvas.offsetLeft,
+                    y: e.targetTouches[0].pageY - canvas.offsetTop
                 };
 
                 for (i = 0; i < boardSize; i += 1) {
@@ -41,7 +35,7 @@ define(['cell', 'resources'], function (cell, resources) {
                         if (cell.inBounds(pos)) {
                             if (e.shiftKey) {
                                 cell.flagged = true;
-                                cell.flaggedImage = resourcesManager.images['flag'];
+                                cell.flaggedImage = resourceManager.images.flag;
                             } else {
                                 cell.highlighted = true;
                                 highlightedCell = cell;
@@ -51,7 +45,9 @@ define(['cell', 'resources'], function (cell, resources) {
                 }
             }, false);
 
-            canvas.addEventListener('mouseup', function (e) {
+            canvas.addEventListener('touchend', function (e) {
+                e.preventDefault();
+
                 var pos,
                     row,
                     i,
@@ -59,8 +55,8 @@ define(['cell', 'resources'], function (cell, resources) {
                     cell;
 
                 pos = {
-                    x: e.pageX - canvas.offsetLeft,
-                    y: e.pageY - canvas.offsetTop
+                    x: e.changedTouches[0].pageX - canvas.offsetLeft,
+                    y: e.changedTouches[0].pageY - canvas.offsetTop
                 };
 
                 for (i = 0; i < boardSize; i += 1) {
@@ -73,7 +69,7 @@ define(['cell', 'resources'], function (cell, resources) {
                             if (cell.highlighted) {
                                 cell.highlighted = false;
                                 my.activateCell(i, j);
-                            };
+                            }
 
                             highlightedCell = null;
                         }
@@ -81,7 +77,9 @@ define(['cell', 'resources'], function (cell, resources) {
                 }
             }, false);
 
-            canvas.addEventListener('mousemove', function (e) {
+            canvas.addEventListener('touchmove', function (e) {
+                e.preventDefault();
+
                 var pos = {
                     x: e.pageX - canvas.offsetLeft,
                     y: e.pageY - canvas.offsetTop
@@ -96,9 +94,7 @@ define(['cell', 'resources'], function (cell, resources) {
                 }
             }, false);
 
-            // Load resource manager and resources
-            resourcesManager = resources();
-            resourcesManager.loadImages({
+            resourceManager.loadImages({
                 'mine': 'resources/mine.png',
                 'cell': 'resources/cell.png',
                 'flag': 'resources/flag.png',
@@ -123,13 +119,13 @@ define(['cell', 'resources'], function (cell, resources) {
                        board[row][col].cellType == 'mine') {
                 board[row][col].selected = true;
                 return;
-            };
+            }
 
             board[row][col].selected = true;
 
             if (row - 1 >= 0 && col - 1 >= 0) {
                 my.activateCell(row - 1, col - 1);
-            };
+            }
 
             if (row - 1 >= 0) {
                 my.activateCell(row - 1, col);
@@ -141,7 +137,7 @@ define(['cell', 'resources'], function (cell, resources) {
 
             if (col - 1 >= 0) {
                 my.activateCell(row, col - 1);
-            };
+            }
 
             if (col + 1 < boardSize) {
                 my.activateCell(row, col + 1);
@@ -149,7 +145,7 @@ define(['cell', 'resources'], function (cell, resources) {
 
             if (row + 1 < boardSize && col - 1 >= 0) {
                 my.activateCell(row + 1, col - 1);
-            };
+            }
 
             if (row + 1 < boardSize) {
                 my.activateCell(row + 1, col);
@@ -163,7 +159,7 @@ define(['cell', 'resources'], function (cell, resources) {
         my.tick = function (time) {
             my.update();
             my.render();
-            requestAnimationFrame(my.tick.bind(this));
+            requestAnimFrame(my.tick);
         };
 
         my.start = function () {
@@ -195,7 +191,7 @@ define(['cell', 'resources'], function (cell, resources) {
                         !(r == row && c == col) &&
                         board[r][c].cellType == 'mine') {
                         count += 1;
-                    };
+                    }
                 }
             }
 
@@ -212,8 +208,8 @@ define(['cell', 'resources'], function (cell, resources) {
                     if (board[i][j].cellType != 'mine') {
                         mineCount = my.getMineCount(i, j);
                         board[i][j].mineCount = mineCount;
-                        board[i][j].selectedImage = resourcesManager.images['cell_' + mineCount];
-                    };
+                        board[i][j].selectedImage = resourceManager.images['cell_' + mineCount];
+                    }
                 }
             }
         };
@@ -233,8 +229,8 @@ define(['cell', 'resources'], function (cell, resources) {
                         y: i * cellHeight,
                         width: cellWidth,
                         height: cellHeight,
-                        image: resourcesManager.images['cell'],
-                        highlightedImage: resourcesManager.images['cell_0']
+                        image: resourceManager.images.cell,
+                        highlightedImage: resourceManager.images.cell_0
                     });
                 }
 
@@ -245,7 +241,7 @@ define(['cell', 'resources'], function (cell, resources) {
             for (i = 0; i < numOfMines; i += 1) {
                 mineCell = board[Math.floor(Math.random()*boardSize)][Math.floor(Math.random()*boardSize)];
                 mineCell.cellType = 'mine';
-                mineCell.selectedImage = resourcesManager.images['mine'];
+                mineCell.selectedImage = resourceManager.images.mine;
                 
             }
 
