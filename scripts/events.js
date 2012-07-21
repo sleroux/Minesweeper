@@ -3,26 +3,13 @@ define(function () {
         var eventMap = {},
             my = {};
 
-        function trigger (eventName) {
-            var i,
-                func,
-                args = Array.prototype.slice.call(arguments, 1);
-
-            if (eventMap.hasOwnProperty(eventName)) {
-                for (i = 0; i < eventMap[eventName].length; i += 1) {
-                    eventMap[eventName][i].apply(null, args);
-                }
-            }
-        }
-
         function touchStart (e) {
             var pos = {
                 x: e.changedTouches[0].pageX - canvas.offsetLeft,
                 y: e.changedTouches[0].pageY - canvas.offsetTop
             };
 
-
-            trigger('cursorDown', e, pos);
+            my.trigger('cursorDown', e, pos);
         }
  
         function touchEnd (e) {
@@ -31,7 +18,7 @@ define(function () {
                 y: e.changedTouches[0].pageY - canvas.offsetTop
             };
 
-            trigger('cursorUp', e, pos);
+            my.trigger('cursorUp', e, pos);
         }
 
         function touchMove (e) {
@@ -40,7 +27,7 @@ define(function () {
                 y: e.changedTouches[0].pageY - canvas.offsetTop
             };
 
-            trigger('cursorMove', e, pos);
+            my.trigger('cursorMove', e, pos);
         }
 
         function mouseDown (e) {
@@ -49,7 +36,7 @@ define(function () {
                 y: e.pageY - canvas.offsetTop
             };
 
-            trigger('cursorDown', e, pos);
+            my.trigger('cursorDown', e, pos);
         }
 
         function mouseUp (e) {
@@ -58,7 +45,7 @@ define(function () {
                 y: e.pageY - canvas.offsetTop
             };
 
-            trigger('cursorUp', e, pos);
+            my.trigger('cursorUp', e, pos);
         }
 
         function mouseMove (e) {
@@ -67,7 +54,7 @@ define(function () {
                 y: e.pageY - canvas.offsetTop
             };
 
-            trigger('cursorMove', e, pos);
+            my.trigger('cursorMove', e, pos);
         }
 
         // Attach the event handlers to the canvas
@@ -87,6 +74,18 @@ define(function () {
             }
 
             eventMap[eventName].push(func);
+        };
+
+        my.trigger = function (eventName) {
+            var i,
+                func,
+                args = Array.prototype.slice.call(arguments, 1);
+
+            if (eventMap.hasOwnProperty(eventName)) {
+                for (i = 0; i < eventMap[eventName].length; i += 1) {
+                    eventMap[eventName][i].apply(null, args);
+                }
+            }
         };
 
         return my;

@@ -18,6 +18,8 @@ define(['jquery',
             highlightedCell,
             startTime,
             flagCount,
+            cursorDownTime = null,
+            cursorDownPosition,
             my = {};
 
 
@@ -30,17 +32,16 @@ define(['jquery',
 
             e.preventDefault();
 
+            cursorDownTime = Date.now();
+            cursorDownPosition = pos;
+
             for (i = 0; i < boardSize; i += 1) {
                 for (j = 0; j < boardSize; j += 1) {
                     cell = board[i][j];
 
                     if (cell.inBounds(pos)) {
-                        if (e.shiftKey) {
-                            cell.flagged = true;
-                        } else {
-                            cell.highlighted = true;
-                            highlightedCell = cell;
-                        }
+                        cell.highlighted = true;
+                        highlightedCell = cell;
                     }
                 }
             }
@@ -59,9 +60,8 @@ define(['jquery',
                     cell = board[i][j];
 
                     if (cell.inBounds(pos)) {
-
-                        // Active the cell if it was the one we were highlighting
-                        if (cell.highlighted) {
+                        // Ignore up event if this cell is flagged
+                        if (!cell.flagged && cell.highlighted) {
                             cell.highlighted = false;
                             my.activateCell(i, j);
                         }
@@ -80,6 +80,25 @@ define(['jquery',
                 if (!highlightedCell.inBounds(pos)) {
                     highlightedCell.highlighted = false;
                     highlightedCell = null;
+                    cursorDownTime = null;
+                    cursorDownPosition = null;
+                }
+            }
+        });
+
+        eventManager.registerHandler('cursorHold', function (pos) {
+            var row,
+               i,
+               j,
+               cell;
+
+            for (i = 0; i < boardSize; i += 1) {
+                for (j = 0; j < boardSize; j += 1) {
+                    cell = board[i][j];
+
+                    if (cell.inBounds(pos)) {
+                        cell.flagged = !cell.flagged;
+                    }
                 }
             }
         });
@@ -217,6 +236,15 @@ define(['jquery',
         };
 
         my.update = function () {
+            var cursorTimeDiff;
+
+            if (cursorDownTime) {
+                if (Date.now() - cursorDownTime > 1000) {
+                    eventManager.trigger('cursorHold', cursorDownPosition);
+                    cursorDownPosition = null;
+                    cursorDownTime = null;
+                }
+            }
         };
 
         my.render = function () {
